@@ -46,10 +46,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+    final refreshKey = GlobalKey<RefreshIndicatorState>();
   List<String> messages = [];
   List<String> username = [];
   List<String> emails = [];
-
+  // int expandedIndex = -1;
   @override
   void initState() {
     // super.initState();
@@ -66,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
       while (itr.moveNext()) {
         messages.add(itr.current.child("message").value.toString());
         username.add(itr.current.child("username").value.toString());
-        emails.add(itr.current.child("emails").value.toString());
+        emails.add(itr.current.child("email").value.toString());
         // print(messages);
         // print(username);
       }
@@ -75,6 +76,46 @@ class _MyHomePageState extends State<MyHomePage> {
       print('No data available.');
     }
   }
+
+  void deleteMessage(String user,int index) async {
+  final confirmed = await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Delete Message'),
+        content: Text('Are you sure you want to delete this message?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, true);
+            },
+            child: Text('Yes'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: Text('No'),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirmed == true) {
+    final ref = FirebaseDatabase.instance.ref('users/$user');
+    await ref.remove();
+    setState(() {
+      messages.removeAt(index);
+      username.removeAt(index);
+      emails.removeAt(index);
+    //  if (index == expandedIndex) {
+    //     expandedIndex = -1;
+    //   }
+    });
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -85,33 +126,56 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Column(
         
         children: [
-          ListView.builder(
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-            itemCount: messages.length,
-            itemBuilder: (BuildContext context, int index) {
-              return Card(
-                margin: EdgeInsets.all(10),
-                child: Material(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.grey,
-                  child: ListTile(
+          RefreshIndicator(
+                      key: refreshKey,
+            onRefresh: () async {
+              // call getData() method again to refresh the data
+              messages.clear();
+              username.clear();
+              emails.clear();
+              setState(() {
+              getData();
+              });
+              },
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
+              itemCount: messages.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Card(
+                  
+                  margin: EdgeInsets.all(10),
+                  child: Material(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.grey,
                     
-                    contentPadding: EdgeInsets.all(3),
-                    // tileColor: Colors.grey,
-                    leading: Icon(Icons.person),
-                    title: Text(username[index]),
-                    subtitle: Text(emails[index]),
-                    trailing: Icon(Icons.arrow_forward),
-                    onTap: () {
-
-                    },
-
-                    
+                    child: ListTile(
+                      
+                      contentPadding: EdgeInsets.all(5),
+                      // tileColor: Colors.grey,
+                      leading: Icon(Icons.person),
+                      title: Text(username[index]),
+                      subtitle:Column(
+          
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            
+                            SizedBox(height: 5),
+                            Text(emails[index]),
+                            SizedBox(height: 5),
+                            Text(messages[index]),
+                          ],
+                        ),
+                      trailing: Icon(Icons.arrow_forward),
+                      onTap: () {
+                           deleteMessage(username[index],index);
+                      },
+                      
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ],
       ),
