@@ -26,14 +26,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class Message {
-  final String username;
-  final String email;
-  final String message;
-
-  Message({required this.username, required this.email, required this.message});
-}
-
 FirebaseDatabase database = FirebaseDatabase.instance;
 
 class MyHomePage extends StatefulWidget {
@@ -51,6 +43,15 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> username = [];
   List<String> emails = [];
   // int expandedIndex = -1;
+  final usernametf = TextEditingController();
+  final emailtf = TextEditingController();
+  final messagetf = TextEditingController();
+    _MyHomePageState(){
+        // Set the text property to a value to be displayed
+        usernametf.text = 'Username';
+        emailtf.text = 'email';
+        messagetf.text = 'message';
+     }
   @override
   void initState() {
     // super.initState();
@@ -116,6 +117,54 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+void postMessage() async {
+  final data = await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Add Message'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: usernametf,
+              decoration: InputDecoration(hintText: 'Username'),
+            ),
+            TextField(
+              controller: emailtf,
+              decoration: InputDecoration(hintText: 'Email'),
+            ),
+            TextField(
+              controller: messagetf,
+              decoration: InputDecoration(hintText: 'Message'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              final ref = FirebaseDatabase.instance.reference();
+              final newChildRef = ref.child('users').push();
+              newChildRef.set({
+                'username': usernametf.text,
+                'email': emailtf.text,
+                'message': messagetf.text,
+              });
+              Navigator.pop(context, true);
+            },
+            child: Text('Add'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: Text('Cancel'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -179,8 +228,14 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
+
+      floatingActionButton:FloatingActionButton(onPressed: () => {
+        postMessage()
+      },
+      child:Icon(Icons.add))
 // This trailing comma makes auto-formatting nicer for build methods.
     );
+
   }
 }
 
