@@ -46,12 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final usernametf = TextEditingController();
   final emailtf = TextEditingController();
   final messagetf = TextEditingController();
-    _MyHomePageState(){
-        // Set the text property to a value to be displayed
-        usernametf.text = 'Username';
-        emailtf.text = 'email';
-        messagetf.text = 'message';
-     }
+
   @override
   void initState() {
     // super.initState();
